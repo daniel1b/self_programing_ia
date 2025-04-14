@@ -4,6 +4,7 @@ import logging
 import json
 import re
 import os
+from dotenv import load_dotenv
 
 # Configuração do logging para depuração
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -12,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 load_dotenv()
 
 
-TOKEN = os.getenv('GITHUB_TOKEN')
+TOKEN = os.getenv('TELEGRAM_TOKEN')
 OLLAMA_URL = os.getenv('OLLAMA_URL')
 
 bot = telebot.TeleBot(TOKEN)
@@ -26,54 +27,41 @@ conversation_context = {}
 def build_prompt(message, history):
     # Obtém os componentes do histórico
     context = history.get('context', "This was the user's first message.")
-    user_msgs = history.get('user_messages', [])
-    model_responses = history.get('model_responses', [])
-    
-    # Filtra as duas últimas mensagens e respostas (em ordem cronológica)
-    recent_user_msgs = user_msgs[-5:] if len(user_msgs) >= 5 else user_msgs
-    recent_model_responses = model_responses[-5:] if len(model_responses) >= 5 else model_responses
+    memoria = history.get('memoria', [])
 
-    # Constrói uma representação intercalada da conversa,
-    # assumindo que as mensagens estão emparelhadas (User, Assistant)
-    conversation_lines = []
-
-    for u_msg, a_msg in zip(recent_user_msgs, recent_model_responses):            
-        conversation_lines.append(f"Assistant: {a_msg}")
-        conversation_lines.append(f"User: {u_msg}")
-
-    history_str = "\n".join(conversation_lines)
 
     prompt = f"""
-You are a friendly AI chat.
+Você é uma IA simpática de conversação.
 
-Task:
-- Read the previous conversation summary.
-- Review the recent conversation history.
-- Understand the new user message.
-- Reply clearly and naturally.
-- Provide a short, third-person summary of what just happened to update the context.
-
-Instructions:
-- Respond strictly in JSON with two keys:
-    "response": your helpfull answer,
-    "last_message_context": a short, third-person summary of what the user is talking.
-
---- 
-Previous context:
+---
+Contexto anterior:
 {context}
 
-Recent conversation history:
-{history_str}
+Histórico recente da conversa:
+{memoria}
 
-New User message:
+Tarefa:
+- Leia o resumo da conversa anterior.
+- Revise o histórico recente da conversa.
+- Entenda a nova mensagem do usuário.
+- Responda de forma clara e natural.
+- Forneça um breve resumo em terceira pessoa do que acabou de acontecer para atualizar o contexto.
+
+Instruções:
+- Responda estritamente em JSON com duas chaves:
+    "response": sua resposta útil,
+    "last_message_context": um breve resumo, em terceira pessoa, do que o usuário está falando.
+
+Nova mensagem do usuário:
 "{message}"
 
-Reply with JSON only:
+Responda apenas com JSON:
 {{
   "response": "...",
   "last_message_context": "..."
 }}
 """
+
     return prompt
 
 def extract_json_block(texto):
@@ -120,17 +108,16 @@ def chat_ollama(entrada_para_modelo, chat_id):
     if chat_id not in conversation_context:
         conversation_context[chat_id] = {
             'context': "This was the user's first message.",
-            'user_messages': [],
-            'model_responses': []
+            'memoria': "",
         }
     
     history = conversation_context[chat_id]
-    history['user_messages'].append(entrada_para_modelo)
+    history['memoria'] = history['memoria'] + "\nUsuario:" + entrada_para_modelo
 
     prompt = build_prompt(entrada_para_modelo, history)
 
     payload = {
-        "model": "deepseek-r1:1.5b",
+        "model": "gemma3:1b",
         "prompt": prompt
     }
 
@@ -162,10 +149,7 @@ def chat_ollama(entrada_para_modelo, chat_id):
 
             novo_contexto_raw = data.get("last_message_context", "")
             history['context'] = novo_contexto_raw
-            history['model_responses'].append(saida_para_usuario)
-
-            history['user_messages'] = history['user_messages'][-2:]
-            history['model_responses'] = history['model_responses'][-2:]
+            history['memoria'] = history['memoria'] + "\nAssistente:" + saida_para_usuario
 
             return saida_para_usuario
         else:

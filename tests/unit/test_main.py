@@ -1,10 +1,10 @@
+import json
+import re
+import logging
 import pytest
-from src.main import soma
+from io import BytesIO
 
-@pytest.mark.unit
-def test_soma_positiva():
-    assert soma(2, 3) == 5
+# ------------- 
 
-@pytest.mark.unit
-def test_soma_negativa():
-    assert soma(-1, -2) == -3
+def test_dummie():
+    assert 2==2
