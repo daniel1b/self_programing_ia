@@ -3,6 +3,8 @@
 import requests
 import json
 import logging
+from transformers import AutoTokenizer
+
 
 class ModeloLLM:
     """
@@ -26,6 +28,11 @@ class ModeloLLM:
         self.temperatura = temperatura
         logging.basicConfig(level=logging.INFO)
 
+    def contar_tokens_gemma(self, texto):
+        tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b-it")  # ou "gemma-7b-it" se for o 7b
+        tokens = tokenizer.encode(texto, add_special_tokens=False)
+        return len(tokens)
+
     def enviar_prompt(self, prompt: str) -> str:
         """
         Envia um prompt para o modelo de linguagem e retorna a resposta gerada.
@@ -47,8 +54,8 @@ class ModeloLLM:
             "stream": True,
             "temperature": self.temperatura
         }
-
-        logging.info(f"[LLM] Enviando prompt para o modelo '{self.modelo}': {prompt}")
+        logging.info(f"="*200)
+        logging.info(f"[LLM] Enviando prompt ({self.contar_tokens_gemma(prompt)} tokens) para o modelo:\n\n '{self.modelo}': {prompt}")
 
         try:
             resposta_texto = ""
@@ -64,8 +71,8 @@ class ModeloLLM:
                     except json.JSONDecodeError as e:
                         logging.warning(f"[LLM] Erro ao decodificar JSON: {e}")
                         continue
-
-            logging.info(f"[LLM] Resposta recebida: {resposta_texto.strip()}")
+            logging.info(f"-"*50)
+            logging.info(f"[LLM] Resposta recebida ({self.contar_tokens_gemma(resposta_texto.strip())} tokens): {resposta_texto.strip()}")
             return resposta_texto.strip()
 
         except requests.RequestException as e:

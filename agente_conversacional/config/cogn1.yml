@@ -1,0 +1,62 @@
+pipeline:
+  - step: identifica_sessoes
+    type: llm
+    input: 
+      - texto
+      - acao
+    prompt: >
+      Analise o texto a seguir:
+      ---
+      '{texto}'
+      ---
+      Analise o texto anterior e realize a ação '{acao}'.
+      Responda de forma direta e objetiva.:
+    output: categorias_texto
+
+  # - step: refina_sessoes
+  #   type: llm
+  #   input: categorias_texto
+  #   prompt: >
+  #     Analise o texto a seguir e identifique as seções principais:
+  #     ---
+  #     '{categorias_texto}'
+  #     ---
+  #     Analise o anterior e identifique as seções principais, com uma breve descrição sobre elas:
+  #   output: categorias_texto
+
+  # - step: refinar_lista
+  #   type: extract_list
+  #   input: categorias_texto
+  #   prompt: >
+  #     Analise o seguinte texto e extraia apenas os itens uma lista com uma breve descrição.
+  #     Remova qualquer texto extra ou desnecessário e apresente cada item em uma nova linha.
+  #     Texto: '{categorias_texto}'
+  #     Itens:
+  #   output: categorias_lista
+
+  # - step: detalhar_itens
+  #   type: loop_llm
+  #   input: 
+  #     - categorias_lista
+  #     - user_input
+  #   prompt: >
+  #     Texto: '{user_input}'
+  #     secção para detalhar: '{item}'
+  #     Detalhe a secção, fornecendo informações adicionais e relevantes.
+  #     Detalhamento:
+  #   output: categorias_detalhadas
+
+  # - step: concatenar
+  #   type: concat
+  #   input: categorias_detalhadas
+  #   prompt: >
+  #     Consolide as respostas abaixo em um único texto coerente e bem estruturado:
+  #     {categorias_detalhadas}
+  #     Consolide as respostas em um único texto, mantendo a clareza e a fluidez.
+  #   output: resposta_final
+
+  # # - step: extrair_lista
+  # #   type: pipeline
+  # #   input: user_input
+  # #   path: "./config/make_list.yml"
+  # #   output: resposta_final

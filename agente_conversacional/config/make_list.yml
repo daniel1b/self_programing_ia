@@ -1,0 +1,10 @@
+pipeline:
+  - step: refinar_lista
+    type: extract_list
+    input: user_input
+    prompt: >
+      Analise o seguinte texto e extraia apenas os itens que compõem uma lista.
+      Remova qualquer texto extra ou desnecessário e apresente cada item em uma nova linha.
+      Texto: '{user_input}'
+      Itens:
+    output: resposta_final

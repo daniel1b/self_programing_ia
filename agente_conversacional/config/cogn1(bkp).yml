@@ -1,0 +1,88 @@
+pipeline:
+  - step: identifica
+    type: llm
+    input: user_input
+    prompt: >
+      Qual é a intenção principal por trás do seguinte conteúdo? 
+      Responda de forma direta e objetiva.
+      ---
+      '{user_input}'
+    output: objetivo_mensagem
+
+  - step: reformula
+    type: llm
+    input:
+      - objetivo_mensagem
+      - user_input
+    prompt: >
+      Dado o objetivo identificado ('{objetivo_mensagem}') e a mensagem original ('{user_input}'),
+      descreva as principais considerações ou pontos que precisam ser abordados para responder de forma adequada.
+      Liste essas considerações sucintamente:
+    output: o_que_pensar
+
+  - step: pensar_topicos
+    type: llm
+    input:
+      - o_que_pensar
+    prompt: >
+      Com base nas considerações a seguir: '{o_que_pensar}',
+      gere uma lista com 2 perguntas que possam orientar a estratégia de resposta à mensagem.
+    output: perguntas
+
+  - step: extrair_tópicos
+    type: extract_list
+    input: perguntas
+    prompt: >
+      Revise as seguintes perguntas e extraia apenas aquelas que realmente são perguntas,
+      removendo qualquer texto redundante ou desnecessário:
+      '{perguntas}'
+    output: topicos
+
+  - step: responder_tópicos
+    type: loop_llm
+    input: topicos
+    prompt: >
+      Utilizando a mensagem original '{user_input}', responda de forma sucinta e clara à seguinte pergunta:
+      Pergunta: '{item}'
+      Resposta:
+    output: respostas_tópicos
+
+  - step: trabalhar_tópicos
+    type: loop_llm
+    input: 
+    - respostas_tópicos
+    - user_input
+    prompt: >
+      texto='{item}', mensagem = '{user_input}', reponda mensagem sucintamente. Resposta =
+    output: respostas_relevantes
+
+  - step: concatenar
+    type: concat
+    input: respostas_relevantes
+    prompt: >
+      Consolide as respostas abaixo em um único texto coerente e bem estruturado:
+      {respostas_relevantes}
+      Consolide as respostas em um único texto, mantendo a clareza e a fluidez.
+    output: texto_completo
+
+  - step: consolidar1
+    type: llm
+    input: 
+      - texto_completo
+      - user_input
+      - objetivo_mensagem
+    prompt: >
+      objetivo='{objetivo_mensagem}', contexto = '{texto_completo}', requisição = '{user_input}',
+      forneça uma resposta final que atenda ao objetivo identificado inicialmente. resposta =
+    output: resposta1
+
+  - step: consolidar2
+    type: llm
+    input: 
+      - resposta1
+      - texto_completo
+      - objetivo_mensagem
+    prompt: >
+      provavel reposta ='{resposta1}', contexto completo = '{texto_completo}'; objetivo_input = '{objetivo_mensagem}';  input = '{user_input}'
+      forneça uma resposta final que atenda ao objetivo identificado inicialmente adicioando informaçoes relevantes. output=
+    output: resposta_final
