@@ -1,0 +1,426 @@
+Gere documentação técnica detalhada com base na estrutura do projeto:
+
+
+=== Módulo: src.core.Agent ===
+
+[ERROS]
+Erro ao importar: cannot import name 'Agent' from 'src.core.Agent' (D:\Projects\self_programing_ia\agente_conversacional\src\core\Agent.py)
+
+=== Módulo: src.core.History ===
+
+[CLASSES]
+
+Classe: History
+Doc: Classe que gerencia o histórico de interações entre o usuário e o agente.
+
+O histórico armazena entradas de interações, onde cada interação consiste 
+no input do usuário e na resposta do agente. A classe oferece métodos para 
+adicionar novas interações, recuperar interações anteriores e limpar o histórico.
+  Método: add_interaction(self, user_input: str, agent_response: str) -> None
+  Descrição: Adiciona uma nova interação ao histórico.
+
+Args:
+    user_input (str): A mensagem enviada pelo usuário.
+    agent_response (str): A resposta gerada pelo agente.
+
+O método cria uma entrada formatada com o input do usuário e a resposta
+do agente, que é então adicionada à lista de interações armazenada.
+  Método: clear(self) -> None
+  Descrição: Limpa todo o histórico de interações.
+
+Este método é útil para reiniciar o histórico, especialmente em cenários 
+de teste ou quando se deseja limpar o estado do agente.
+
+Não retorna nenhum valor.
+  Método: get_all(self) -> List[str]
+  Descrição: Retorna todo o histórico de interações.
+
+Returns:
+    List[str]: Uma lista contendo todas as interações armazenadas no histórico.
+  Método: get_last_interactions(self, n: int = 5) -> List[str]
+  Descrição: Retorna as últimas n interações do histórico.
+
+Args:
+    n (int): O número de interações a serem retornadas. O padrão é 5.
+
+Returns:
+    List[str]: Uma lista contendo as últimas n interações no formato 
+    de strings.
+
+Se o número de interações for menor que n, todas as interações existentes
+serão retornadas.
+
+=== Módulo: src.core.Pipeline ===
+
+[CLASSES]
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+Classe: Pipeline
+Doc: Sem docstring
+  Método: process(self, agent_context: Dict) -> str
+  Descrição: Executa o fluxo de processamento usando o contexto do Agent
+
+Args:
+    agent_context (Dict): Dados do Agent (histórico, memórias, estado)
+    
+Returns:
+    str: Resposta final processada
+
+=== Módulo: src.interfaces.IModule ===
+
+[CLASSES]
+
+Classe: ABC
+Doc: Helper class that provides a standard way to create an ABC using
+inheritance.
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+[FUNÇÕES]
+
+Função: abstractmethod(funcobj)
+Doc: A decorator indicating abstract methods.
+
+Requires that the metaclass is ABCMeta or derived from it.  A
+class that has a metaclass derived from ABCMeta cannot be
+instantiated unless all of its abstract methods are overridden.
+The abstract methods can be called using any of the normal
+'super' call mechanisms.  abstractmethod() may be used to declare
+abstract methods for properties and descriptors.
+
+Usage:
+
+    class C(metaclass=ABCMeta):
+        @abstractmethod
+        def my_abstract_method(self, arg1, arg2, argN):
+            ...
+
+=== Módulo: src.llm.ModeloLLM ===
+
+[CLASSES]
+
+Classe: ModeloLLM
+Doc: Classe para interagir com um modelo de linguagem generativa hospedado localmente ou remotamente.
+
+Esta classe permite enviar prompts para um modelo de linguagem (LLM), receber a resposta do modelo, 
+alterar o modelo ou ajustar parâmetros como a temperatura do modelo.
+  Método: alterar_modelo(self, novo_modelo: str) -> None
+  Descrição: Altera o modelo de linguagem a ser utilizado.
+
+Args:
+    novo_modelo (str): O nome do novo modelo a ser utilizado.
+
+Este método altera o modelo de linguagem configurado, permitindo a utilização de diferentes modelos de 
+linguagem ao longo da execução.
+  Método: alterar_temperatura(self, nova_temp: float) -> None
+  Descrição: Altera a temperatura do modelo de linguagem.
+
+Args:
+    nova_temp (float): O novo valor de temperatura a ser utilizado no modelo.
+
+A temperatura controla o nível de aleatoriedade na geração de respostas. Um valor mais alto resulta em
+respostas mais criativas, enquanto um valor mais baixo tende a gerar respostas mais conservadoras.
+  Método: enviar_prompt(self, prompt: str) -> str
+  Descrição: Envia um prompt para o modelo de linguagem e retorna a resposta gerada.
+
+Args:
+    prompt (str): O texto de entrada a ser enviado ao modelo.
+
+Returns:
+    str: A resposta gerada pelo modelo após o processamento do prompt.
+
+Este método envia o prompt ao modelo utilizando uma requisição HTTP POST. A resposta do modelo é recebida
+de forma contínua (streaming), e as partes da resposta são concatenadas e retornadas.
+Caso haja um erro na comunicação ou decodificação da resposta, um erro apropriado é registrado e uma mensagem
+de erro é retornada.
+
+=== Módulo: src.memory.ImmutableMemory ===
+
+[CLASSES]
+
+Classe: ImmutableMemory
+Doc: Classe que carrega e mantém a memória imutável de configuração do agente.
+
+Esta classe carrega os dados de configuração do agente a partir de um arquivo YAML,
+fornecendo métodos para acessar informações sobre a personalidade, comportamentos e 
+outros parâmetros do agente.
+  Método: get_config(self) -> dict
+  Descrição: Retorna todo o dicionário de dados da memória imutável.
+
+Este método fornece acesso ao conteúdo completo da configuração carregada, 
+permitindo o acesso direto a todos os dados, incluindo nome do agente, personalidade, 
+comportamentos padrão e prompts do sistema.
+
+Returns:
+    dict: O dicionário contendo os dados carregados do arquivo de configuração YAML.
+  Método: get_summary(self) -> str
+  Descrição: Retorna um resumo textual da personalidade e comportamentos do agente.
+
+Este método gera uma descrição baseada nas informações carregadas da configuração do agente,
+incluindo os traços de personalidade, tom de comunicação, idioma e modo de processamento.
+
+Returns:
+    str: Um resumo textual com a personalidade e comportamentos do agente.
+
+[FUNÇÕES]
+
+Função: load_yaml(filepath: str) -> dict → <class 'dict'>
+Doc: Carrega o conteúdo de um arquivo YAML e retorna como um dicionário.
+
+Este método abre um arquivo YAML especificado pelo caminho do arquivo e converte 
+seu conteúdo em um dicionário Python usando a função `yaml.safe_load`.
+
+Args:
+    filepath (str): O caminho para o arquivo YAML a ser carregado.
+
+Returns:
+    dict: O conteúdo do arquivo YAML convertido para um dicionário.
+
+Raises:
+    FileNotFoundError: Se o arquivo especificado não for encontrado.
+    yaml.YAMLError: Se ocorrer um erro ao tentar carregar o conteúdo do arquivo YAML.
+
+=== Módulo: src.memory.LongTermMemory ===
+
+[CLASSES]
+
+Classe: LongTermMemory
+Doc: Classe para gerenciar a memória de longo prazo de um agente, armazenando e atualizando informações 
+ao longo do tempo, mantendo o histórico de interações e dados relevantes.
+
+Esta classe carrega e mantém a memória de longo prazo de um agente, armazenando as informações em um 
+arquivo, compactando a memória quando necessário e utilizando um modelo de linguagem para resumir e 
+incorporar novas informações.
+  Método: get_memory(self) -> str
+  Descrição: Retorna o conteúdo atual da memória.
+
+Este método retorna a memória atual do agente, sem espaços em branco extras.
+
+Returns:
+    str: A memória atual do agente.
+  Método: load_memory(self) -> str
+  Descrição: Carrega a memória de longo prazo a partir de um arquivo.
+
+Verifica se o arquivo de memória existe. Se existir, o conteúdo é carregado. Caso contrário, 
+a memória será inicializada como uma string vazia.
+
+Returns:
+    str: O conteúdo da memória carregado a partir do arquivo.
+  Método: update_memory(self, new_info: str)
+  Descrição: Atualiza a memória com novas informações e, se necessário, compacta a memória.
+
+Esse método adiciona a nova informação ao final da memória e, se a quantidade de tokens ultrapassar 
+o limite configurado, chama a função de compactação para reduzir o tamanho da memória.
+
+Args:
+    new_info (str): A nova informação a ser adicionada à memória.
+
+Classe: ModeloLLM
+Doc: Classe para interagir com um modelo de linguagem generativa hospedado localmente ou remotamente.
+
+Esta classe permite enviar prompts para um modelo de linguagem (LLM), receber a resposta do modelo, 
+alterar o modelo ou ajustar parâmetros como a temperatura do modelo.
+  Método: alterar_modelo(self, novo_modelo: str) -> None
+  Descrição: Altera o modelo de linguagem a ser utilizado.
+
+Args:
+    novo_modelo (str): O nome do novo modelo a ser utilizado.
+
+Este método altera o modelo de linguagem configurado, permitindo a utilização de diferentes modelos de 
+linguagem ao longo da execução.
+  Método: alterar_temperatura(self, nova_temp: float) -> None
+  Descrição: Altera a temperatura do modelo de linguagem.
+
+Args:
+    nova_temp (float): O novo valor de temperatura a ser utilizado no modelo.
+
+A temperatura controla o nível de aleatoriedade na geração de respostas. Um valor mais alto resulta em
+respostas mais criativas, enquanto um valor mais baixo tende a gerar respostas mais conservadoras.
+  Método: enviar_prompt(self, prompt: str) -> str
+  Descrição: Envia um prompt para o modelo de linguagem e retorna a resposta gerada.
+
+Args:
+    prompt (str): O texto de entrada a ser enviado ao modelo.
+
+Returns:
+    str: A resposta gerada pelo modelo após o processamento do prompt.
+
+Este método envia o prompt ao modelo utilizando uma requisição HTTP POST. A resposta do modelo é recebida
+de forma contínua (streaming), e as partes da resposta são concatenadas e retornadas.
+Caso haja um erro na comunicação ou decodificação da resposta, um erro apropriado é registrado e uma mensagem
+de erro é retornada.
+
+[FUNÇÕES]
+
+Função: _compact_memory(self, debug: bool = False)
+Doc: Compacta a memória para manter o conteúdo dentro do limite de tokens.
+
+Este método gera um resumo da memória existente e incorpora novas informações, mantendo o conteúdo 
+relevante de forma concisa. Em caso de falha na compactação, mantém a memória original e registra erro.
+
+Args:
+    debug (bool): Se True, imprime o prompt enviado ao modelo para depuração.
+
+=== Módulo: src.modules.EmotionalAnalysisModule ===
+
+[CLASSES]
+
+Classe: EmotionalAnalysisModule (IModule)
+Doc: Módulo de análise emocional das mensagens.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Analisa a mensagem do usuário usando abordagem emocional.
+
+Args:
+    context (Dict): Contexto contendo a mensagem, histórico e configurações
+    
+Returns:
+    Dict: Resultado da análise emocional
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+=== Módulo: src.modules.IntentAnalysis ===
+
+[CLASSES]
+
+Classe: Any
+Doc: Special type indicating an unconstrained type.
+
+- Any is compatible with every type.
+- Any assumed to have all methods.
+- All values assumed to be instances of Any.
+
+Note that all the above statements are true from the point of view of
+static type checkers. At runtime, Any should not be used with instance
+checks.
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+Classe: IntentAnalysis (IModule)
+Doc: Interface abstrata para módulos de processamento.
+  Método: _extract_keywords(self, text: str) -> List[str]
+  Descrição: Sem docstring
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+=== Módulo: src.modules.RationalAnalysisModule ===
+
+[CLASSES]
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+Classe: RationalAnalysisModule (IModule)
+Doc: Módulo de análise racional das mensagens.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Analisa a mensagem do usuário usando abordagem racional.
+
+Args:
+    context (Dict): Contexto contendo a mensagem, histórico e configurações
+    
+Returns:
+    Dict: Resultado da análise racional
+
+=== Módulo: src.modules.ResponseConsolidationModule ===
+
+[CLASSES]
+
+Classe: IModule (ABC)
+Doc: Interface abstrata para módulos de processamento.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Método principal de execução do módulo.
+
+Args:
+    context (Dict): Contexto completo contendo dados do agente
+    
+Returns:
+    Dict: Resultado do processamento do módulo
+
+Classe: ResponseConsolidationModule (IModule)
+Doc: Módulo para consolidar diferentes análises em uma resposta final.
+  Método: run(self, context: Dict) -> Dict
+  Descrição: Consolida as diferentes análises em uma resposta coerente.
+
+Args:
+    context (Dict): Contexto contendo as análises e configurações
+    
+Returns:
+    Dict: Resultado final consolidado
+
+=== Módulo: src.utils.yaml_loader ===
+
+[FUNÇÕES]
+
+Função: load_yaml(filepath: str) -> dict → <class 'dict'>
+Doc: Carrega o conteúdo de um arquivo YAML e retorna como um dicionário.
+
+Este método abre um arquivo YAML especificado pelo caminho do arquivo e converte 
+seu conteúdo em um dicionário Python usando a função `yaml.safe_load`.
+
+Args:
+    filepath (str): O caminho para o arquivo YAML a ser carregado.
+
+Returns:
+    dict: O conteúdo do arquivo YAML convertido para um dicionário.
+
+Raises:
+    FileNotFoundError: Se o arquivo especificado não for encontrado.
+    yaml.YAMLError: Se ocorrer um erro ao tentar carregar o conteúdo do arquivo YAML.
+
+
+Incluir:
+1. Diagrama da arquitetura
+2. Descrição de cada módulo
+3. Fluxo principal de execução
+4. Interfaces importantes
+5. Dependências internas e externas
